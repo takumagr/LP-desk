@@ -3,11 +3,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { config, extractTexts, diffTexts, editFile, ROOT } from "./lib.mjs";
+import { config, extractTexts, diffTexts, editFile, unbundle, ROOT } from "./lib.mjs";
 
 const base = process.argv[2] || "origin/main";
 const show = (ref, file) => {
-  try { return execFileSync("git", ["show", `${ref}:${file}`], { cwd: ROOT, encoding: "utf8", maxBuffer: 64 << 20 }); }
+  try { return execFileSync("git", ["show", `${ref}:${file}`], { cwd: ROOT, encoding: "utf8", maxBuffer: 64 << 20, stdio: ["ignore", "pipe", "ignore"] }); }
   catch { return ""; }
 };
 const cell = (s) => (s == null ? "—" : s.replace(/\|/g, "\\|").replace(/\n/g, " ").slice(0, 160));
@@ -16,7 +16,10 @@ let md = "## 変更点の一覧（承認用）\n\n";
 let total = 0;
 for (const p of config.pages) {
   const f = editFile(p);
-  const before = extractTexts(show(base, f));
+  let old = show(base, f);
+  // 比較元にまだ編集用ソースが無い場合は、比較元の公開ファイルを分解して比べる
+  if (!old && p.type === "bundle") { const b = show(base, p.out); if (b) old = unbundle(b).page; }
+  const before = extractTexts(old);
   const after = extractTexts(fs.readFileSync(path.join(ROOT, f), "utf8"));
   const changes = diffTexts(before, after);
   if (!changes.length) continue;
