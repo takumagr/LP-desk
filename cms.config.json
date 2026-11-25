@@ -1,0 +1,17 @@
+{
+  "pages": [
+    {
+      "name": "DESK ウェイトリスト",
+      "url": "/",
+      "type": "bundle",
+      "src": "src/index",
+      "out": "index.html"
+    },
+    {
+      "name": "風土承継機構",
+      "url": "/next",
+      "type": "html",
+      "file": "next/index.html"
+    }
+  ]
+}
